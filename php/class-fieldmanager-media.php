@@ -155,50 +155,53 @@ class Fieldmanager_Media extends Fieldmanager_Field {
 	public function form_element( $value = array() ) {
 		if ( is_numeric( $value ) && $value > 0 ) {
 			$attachment = get_post( $value );
-			// Open the preview wrapper.
-			$preview    = '<div class="media-file-preview">';
-			$file_label = ''; // The uploaded file label - image or file.
-
-			// If the preview is an image display the image label, otherwise use the file label.
-			if ( wp_attachment_is( 'image', $attachment ) ) {
-				$file_label = $this->selected_image_label;
-			} else {
-				$file_label = $this->selected_file_label;
+			// Check if attachment is valid.
+			if ( $attachment instanceof WP_Post && 'attachment' === $attachment->post_type ) {
+				// Open the preview wrapper.
+				$preview    = '<div class="media-file-preview">';
+				$file_label = ''; // The uploaded file label - image or file.
+	
+				// If the preview is an image display the image label, otherwise use the file label.
+				if ( wp_attachment_is( 'image', $attachment ) ) {
+					$file_label = $this->selected_image_label;
+				} else {
+					$file_label = $this->selected_file_label;
+				}
+	
+				$preview .= '<a href="#">' . wp_get_attachment_image(
+					$value,
+					$this->preview_size,
+					true,
+					array(
+						'class' => $this->thumbnail_class,
+					)
+				) . '</a>';
+	
+				// phpcs:ignore PEAR.Functions.FunctionCallSignature.ContentAfterOpenBracket -- baseline
+				$preview .= sprintf( '<div class="fm-file-detail">%1$s<h4>%2$s</h4><span class="fm-file-type">%3$s</span></div>',
+					esc_html( $file_label ),
+					wp_get_attachment_link( $value, $this->preview_size, true, true, $attachment->post_title ),
+					esc_html( $attachment->post_mime_type )
+				);
+	
+				$button_string = '<a href="#" class="%1$s"><span class="screen-reader-text">%2$s</span></a>';
+	
+				$preview .= sprintf(
+					$button_string,
+					esc_attr( 'fm-media-edit' ),
+					esc_html__( 'edit', 'fieldmanager' )
+				);
+	
+				$preview .= sprintf(
+					$button_string,
+					esc_attr( 'fm-media-remove fm-delete fmjs-remove' ),
+					esc_html( $this->remove_media_label )
+				);
+	
+				$preview .= '</div>';
+	
+				$preview = apply_filters( 'fieldmanager_media_preview', $preview, $value, $attachment );
 			}
-
-			$preview .= '<a href="#">' . wp_get_attachment_image(
-				$value,
-				$this->preview_size,
-				true,
-				array(
-					'class' => $this->thumbnail_class,
-				)
-			) . '</a>';
-
-			// phpcs:ignore PEAR.Functions.FunctionCallSignature.ContentAfterOpenBracket -- baseline
-			$preview .= sprintf( '<div class="fm-file-detail">%1$s<h4>%2$s</h4><span class="fm-file-type">%3$s</span></div>',
-				esc_html( $file_label ),
-				wp_get_attachment_link( $value, $this->preview_size, true, true, $attachment->post_title ),
-				esc_html( $attachment->post_mime_type )
-			);
-
-			$button_string = '<a href="#" class="%1$s"><span class="screen-reader-text">%2$s</span></a>';
-
-			$preview .= sprintf(
-				$button_string,
-				esc_attr( 'fm-media-edit' ),
-				esc_html__( 'edit', 'fieldmanager' )
-			);
-
-			$preview .= sprintf(
-				$button_string,
-				esc_attr( 'fm-media-remove fm-delete fmjs-remove' ),
-				esc_html( $this->remove_media_label )
-			);
-
-			$preview .= '</div>';
-
-			$preview = apply_filters( 'fieldmanager_media_preview', $preview, $value, $attachment );
 		} else {
 			$preview = '';
 		}
